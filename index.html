@@ -956,6 +956,13 @@
 
     // Inicializar la interfaz
     createUI();
+
+    // Initialize the code display
+    document.getElementById('code').textContent = instagramScript;
+
+    // Add event listener for copy button
+    document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+    document.getElementById('closeConfirm').addEventListener('click', closeOverlay);
 })();`;
 
     async function copyToClipboard() {
