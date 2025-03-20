@@ -2,6 +2,10 @@
 
 Una herramienta para detectar posibles seguidores falsos en perfiles de Instagram.
 
+> 🔗 **Acceso directo:** [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
+
+> ⚠️ **Nota:** Este proyecto es un fork mejorado de [InstagramUnfollowers](https://github.com/davidarroyo1234/InstagramUnfollowers) creado por [@davidarroyo1234](https://github.com/davidarroyo1234).
+
 ## 🚀 Características
 
 - Detección automática de cuentas sospechosas
