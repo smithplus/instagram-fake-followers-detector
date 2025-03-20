@@ -1,94 +1,95 @@
 # Instagram Fake Followers Detector
 
-> 🔗 **Acceso directo:** [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
+> 🔗 **Direct Access:** [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
 
-> ⚠️ **Nota:** Este proyecto es un fork mejorado de [InstagramUnfollowers](https://github.com/davidarroyo1234/InstagramUnfollowers) creado por [@davidarroyo1234](https://github.com/davidarroyo1234).
+> ⚠️ **Note:** This project is an enhanced fork of [InstagramUnfollowers](https://github.com/davidarroyo1234/InstagramUnfollowers) created by [@davidarroyo1234](https://github.com/davidarroyo1234).
 
-## 📝 Descripción
-Herramienta para detectar seguidores potencialmente falsos en Instagram. Analiza perfiles en busca de patrones sospechosos y proporciona un informe detallado.
+## 📝 About
+A powerful tool designed to detect and analyze potentially fake followers on Instagram profiles. This enhanced version provides detailed insights into follower authenticity, helping users identify suspicious accounts and maintain genuine engagement on their Instagram profiles.
 
-## ✨ Características
-- Detección automática de cuentas sospechosas
-- Interfaz intuitiva y fácil de usar
-- Parámetros de detección personalizables
-- Exportación de resultados a CSV
-- Capacidad de pausar y reanudar el análisis
-- Análisis en tiempo real con barra de progreso
+## ✨ Features
+- Automatic detection of suspicious accounts
+- Intuitive and user-friendly interface
+- Customizable detection parameters
+- CSV export functionality
+- Pause and resume analysis capability
+- Real-time progress tracking
+- Detailed analytics and reporting
 
-## 📋 Requisitos
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Acceso a Instagram
-- Inicio de sesión en Instagram desde el navegador (requerido para acceder a la API de Instagram)
-- JavaScript habilitado en el navegador
+## 📋 Requirements
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Instagram access
+- Instagram login in your browser (required for Instagram API access)
+- JavaScript enabled in your browser
 
-## 🚀 Instrucciones de Uso
+## 🚀 Usage Instructions
 
-### 1. Preparación
-1. Asegúrate de estar iniciado sesión en Instagram en tu navegador
-2. Navega al perfil de Instagram que deseas analizar
+### 1. Preparation
+1. Make sure you're logged into Instagram in your browser
+2. Navigate to the Instagram profile you want to analyze
 
-### 2. Abrir la Consola del Navegador
-Hay varias formas de abrir la consola del navegador:
+### 2. Open Browser Console
+There are several ways to open the browser console:
 
-**Método 1 - Atajos de teclado:**
-- Windows/Linux: `Ctrl + Shift + J` (Chrome) o `Ctrl + Shift + K` (Firefox)
-- Mac: `Cmd + Option + J` (Chrome) o `Cmd + Option + K` (Firefox)
+**Method 1 - Keyboard shortcuts:**
+- Windows/Linux: `Ctrl + Shift + J` (Chrome) or `Ctrl + Shift + K` (Firefox)
+- Mac: `Cmd + Option + J` (Chrome) or `Cmd + Option + K` (Firefox)
 
-**Método 2 - Menú del navegador:**
+**Method 2 - Browser menu:**
 - Chrome: 
-  1. Haz clic en los tres puntos (⋮) en la esquina superior derecha
-  2. Ve a "Más herramientas" > "Herramientas para desarrolladores"
-  3. Selecciona la pestaña "Console"
+  1. Click the three dots (⋮) in the top-right corner
+  2. Go to "More tools" > "Developer tools"
+  3. Select the "Console" tab
 - Firefox:
-  1. Haz clic en el menú (☰) en la esquina superior derecha
-  2. Ve a "Más herramientas" > "Herramientas para desarrolladores"
-  3. Selecciona la pestaña "Console"
+  1. Click the menu (☰) in the top-right corner
+  2. Go to "More tools" > "Developer tools"
+  3. Select the "Console" tab
 
-### 3. Ejecutar el Detector
-1. Ve a [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
-2. Haz clic en el botón "Copiar código"
-3. Vuelve a la pestaña de Instagram
-4. Pega el código en la consola del navegador
-5. Presiona Enter para ejecutar el detector
+### 3. Run the Detector
+1. Go to [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
+2. Click the "Copy code" button
+3. Return to the Instagram tab
+4. Paste the code into the browser console
+5. Press Enter to run the detector
 
-### 4. Análisis
-- El detector comenzará a analizar los seguidores del perfil
-- Verás una barra de progreso en la consola
-- Puedes pausar el análisis en cualquier momento
-- Los resultados se mostrarán en la consola y podrás exportarlos a CSV
+### 4. Analysis
+- The detector will begin analyzing the profile's followers
+- You'll see a progress bar in the console
+- You can pause the analysis at any time
+- Results will be displayed in the console and can be exported to CSV
 
-### 5. Resultados
-- Cuentas sospechosas detectadas
-- Estadísticas detalladas
-- Opción para exportar resultados a CSV
-- Recomendaciones basadas en el análisis
+### 5. Results
+- Detected suspicious accounts
+- Detailed statistics
+- CSV export option
+- Analysis-based recommendations
 
-## ⚙️ Configuración
-Puedes ajustar los parámetros de detección en la consola antes de ejecutar el análisis:
+## ⚙️ Configuration
+You can adjust the detection parameters in the console before running the analysis:
 
 ```javascript
 const config = {
-    followersFollowingRatio: 2.0,    // Ratio seguidores/seguidos
-    minPostsPerMonth: 2,            // Mínimo de publicaciones por mes
-    minEngagementRate: 0.01,        // Tasa mínima de engagement
-    minAccountAge: 30,              // Edad mínima de la cuenta en días
-    requireProfilePic: true,        // Requerir foto de perfil
-    requireBio: true,               // Requerir biografía
-    batchSize: 50                   // Tamaño del lote de análisis
+    followersFollowingRatio: 2.0,    // Followers/following ratio
+    minPostsPerMonth: 2,            // Minimum posts per month
+    minEngagementRate: 0.01,        // Minimum engagement rate
+    minAccountAge: 30,              // Minimum account age in days
+    requireProfilePic: true,        // Require profile picture
+    requireBio: true,               // Require biography
+    batchSize: 50                   // Analysis batch size
 };
 ```
 
-## 🔒 Privacidad y Seguridad
-- No se almacena ninguna información personal
-- El análisis se realiza localmente en tu navegador
-- No se requiere acceso a tu cuenta de Instagram
-- No se comparte información con terceros
+## 🔒 Privacy and Security
+- No personal information is stored
+- Analysis is performed locally in your browser
+- No Instagram account access required
+- No information is shared with third parties
 
-## 📄 Licencia
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 Contribuciones
-Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
+## 🤝 Contributing
+Contributions are welcome. Please open an issue first to discuss the changes you would like to make.
 
-## ⚠️ Descargo Legal
-Esta herramienta es solo para fines educativos y de investigación. No nos hacemos responsables del uso indebido de la misma. 
+## ⚠️ Legal Disclaimer
+This tool is for educational and research purposes only. We are not responsible for any misuse of this tool. 
