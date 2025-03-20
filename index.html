@@ -43,12 +43,20 @@
       pointer-events: none;
     }
 
-    .codeBox {
-      width: 100%;
-      font-size: 10px;
-      user-select: none;
-      margin: 0 auto;
-      margin-top: 20px;
+    .code-box {
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      position: relative;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #d4d4d4;
+      border: 1px solid #333;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .codeBox code {
@@ -313,7 +321,7 @@
         </div>
       </header>
       <div class="codeBox__wrapper">
-        <div class="codeBox">
+        <div class="code-box">
           <pre><code class="language-javascript" id="code"></code></pre>
         </div>
         <button class="copy-button" id="copyButton">
@@ -356,6 +364,10 @@
       </div>
     </div>
   </div>
+  <footer>
+    <p>This project is an enhanced fork of InstagramUnfollowers created by @davidarroyo1234 and improved by @smithplus</p>
+    <p>© 2024 Instagram Fake Followers Detector. All rights reserved.</p>
+  </footer>
   <script>
     // Handle resource loading errors
     window.addEventListener('error', function(e) {
