@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Instagram Fake Followers Detector</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/prism.min.js"
     integrity="sha512-UOoJElONeUNzQbbKQbjldDf9MwOHqxNz49NNJJ1d90yp+X9edsHyJoAs6O4K19CZGaIdjI5ohK+O2y5lBTW6uQ=="
@@ -213,6 +214,44 @@
   .language-javascript {
     border: unset !important;
   }
+
+  .instructions {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  .instructions h2 {
+    color: #262626;
+    margin-top: 0;
+  }
+
+  .instructions ol {
+    padding-left: 20px;
+  }
+
+  .instructions li {
+    margin-bottom: 10px;
+  }
+
+  .credit {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dbdbdb;
+    font-size: 14px;
+    color: #8e8e8e;
+  }
+
+  .credit a {
+    color: #0095f6;
+    text-decoration: none;
+  }
+
+  .credit a:hover {
+    text-decoration: underline;
+  }
 </style>
 
 <body>
@@ -231,6 +270,23 @@
         <span>Fake Followers Detector</span>
       </div>
     </header>
+    <div class="instructions">
+      <h2>📝 Instrucciones de Uso</h2>
+      <ol>
+        <li>Ve a Instagram y navega al perfil que quieres analizar</li>
+        <li>Abre la consola del navegador:
+          <ul>
+            <li>Windows: Presiona <code>Ctrl + Shift + J</code></li>
+            <li>Mac: Presiona <code>Cmd + Option + I</code></li>
+          </ul>
+        </li>
+        <li>Copia el código de abajo usando el botón "Copiar código"</li>
+        <li>Pega el código en la consola del navegador</li>
+        <li>Presiona Enter para ejecutar el detector</li>
+        <li>Espera a que termine el análisis</li>
+        <li>Los resultados se mostrarán en la consola</li>
+      </ol>
+    </div>
     <div class="codeBox__wrapper">
       <div class="codeBox">
         <pre><code class="language-javascript" id="code"></code></pre>
@@ -244,6 +300,9 @@
 
         Copiar código
       </button>
+    </div>
+    <div class="credit">
+      <p>Este proyecto es un fork mejorado de <a href="https://github.com/davidarroyo1234/InstagramUnfollowers" target="_blank">InstagramUnfollowers</a> creado por <a href="https://github.com/davidarroyo1234" target="_blank">@davidarroyo1234</a></p>
     </div>
   </div>
   <div class="confirm-overlay" id="overlay">
@@ -873,6 +932,9 @@
       overlay.classList.remove("show");
     }
   }
+
+  // Mostrar el código inicial
+  document.getElementById('code').textContent = instagramScript;
 </script>
 
 </html> 
