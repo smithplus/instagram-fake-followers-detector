@@ -21,34 +21,74 @@ Herramienta para detectar seguidores potencialmente falsos en Instagram. Analiza
 - Inicio de sesión en Instagram desde el navegador (requerido para acceder a la API de Instagram)
 - JavaScript habilitado en el navegador
 
-## 🚀 Características
+## 🚀 Instrucciones de Uso
 
-- Detección automática de cuentas sospechosas
-- Interfaz de usuario intuitiva
-- Exportación de resultados a CSV
-- Análisis de ratio seguidores/seguidos
-- Verificación de actividad de publicación
-- Cálculo de tasa de engagement
+### 1. Preparación
+1. Asegúrate de estar iniciado sesión en Instagram en tu navegador
+2. Navega al perfil de Instagram que deseas analizar
 
-## 💡 Uso
+### 2. Abrir la Consola del Navegador
+Hay varias formas de abrir la consola del navegador:
 
-1. Ve a Instagram y navega al perfil que quieres analizar
-2. Abre la consola del navegador (F12 o Cmd+Option+I en Mac)
-3. Copia y pega el código del detector
-4. Haz clic en "Comenzar Análisis"
-5. Espera a que termine el análisis
-6. Exporta los resultados a CSV si lo deseas
+**Método 1 - Atajos de teclado:**
+- Windows/Linux: `Ctrl + Shift + J` (Chrome) o `Ctrl + Shift + K` (Firefox)
+- Mac: `Cmd + Option + J` (Chrome) o `Cmd + Option + K` (Firefox)
 
-## 🔒 Privacidad
+**Método 2 - Menú del navegador:**
+- Chrome: 
+  1. Haz clic en los tres puntos (⋮) en la esquina superior derecha
+  2. Ve a "Más herramientas" > "Herramientas para desarrolladores"
+  3. Selecciona la pestaña "Console"
+- Firefox:
+  1. Haz clic en el menú (☰) en la esquina superior derecha
+  2. Ve a "Más herramientas" > "Herramientas para desarrolladores"
+  3. Selecciona la pestaña "Console"
 
+### 3. Ejecutar el Detector
+1. Ve a [https://smithplus.github.io/instagram-fake-followers-detector/](https://smithplus.github.io/instagram-fake-followers-detector/)
+2. Haz clic en el botón "Copiar código"
+3. Vuelve a la pestaña de Instagram
+4. Pega el código en la consola del navegador
+5. Presiona Enter para ejecutar el detector
+
+### 4. Análisis
+- El detector comenzará a analizar los seguidores del perfil
+- Verás una barra de progreso en la consola
+- Puedes pausar el análisis en cualquier momento
+- Los resultados se mostrarán en la consola y podrás exportarlos a CSV
+
+### 5. Resultados
+- Cuentas sospechosas detectadas
+- Estadísticas detalladas
+- Opción para exportar resultados a CSV
+- Recomendaciones basadas en el análisis
+
+## ⚙️ Configuración
+Puedes ajustar los parámetros de detección en la consola antes de ejecutar el análisis:
+
+```javascript
+const config = {
+    followersFollowingRatio: 2.0,    // Ratio seguidores/seguidos
+    minPostsPerMonth: 2,            // Mínimo de publicaciones por mes
+    minEngagementRate: 0.01,        // Tasa mínima de engagement
+    minAccountAge: 30,              // Edad mínima de la cuenta en días
+    requireProfilePic: true,        // Requerir foto de perfil
+    requireBio: true,               // Requerir biografía
+    batchSize: 50                   // Tamaño del lote de análisis
+};
+```
+
+## 🔒 Privacidad y Seguridad
 - No se almacena ninguna información personal
-- No se requiere inicio de sesión
-- Todo el análisis se realiza localmente en tu navegador
+- El análisis se realiza localmente en tu navegador
+- No se requiere acceso a tu cuenta de Instagram
+- No se comparte información con terceros
 
-## 📝 Licencia
-
+## 📄 Licencia
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
-## ⚠️ Aviso Legal
+## 🤝 Contribuciones
+Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
 
-Esta herramienta es solo para fines educativos y de investigación. 
+## ⚠️ Descargo Legal
+Esta herramienta es solo para fines educativos y de investigación. No nos hacemos responsables del uso indebido de la misma. 
