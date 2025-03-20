@@ -21,15 +21,187 @@
     const username = getCurrentUsername();
     if (!username) return;
 
-    // Configuración por defecto
-    let config = {
-        maxPosts: 0,                      // Máximo número de posts para considerar sospechoso
-        minFollowers: 10,                 // Mínimo número de seguidores para considerar sospechoso
-        followersPerRequest: 50,          // Seguidores por solicitud
-        cooldownBetweenProfiles: 2000,    // Tiempo entre análisis de perfiles (ms)
-        cooldownBetweenRequests: 1000,    // Tiempo entre solicitudes de seguidores (ms)
-        retryDelay: 5000                  // Tiempo base para reintentos (ms)
+    // Configuration for detecting fake followers
+    const config = {
+        followersFollowingRatio: 2.0,    // Followers/following ratio
+        minPostsPerMonth: 2,            // Minimum posts per month
+        minEngagementRate: 0.01,        // Minimum engagement rate
+        minAccountAge: 30,              // Minimum account age in days
+        requireProfilePic: true,        // Require profile picture
+        requireBio: true,               // Require biography
+        batchSize: 50                   // Analysis batch size
     };
+
+    class InstagramAnalyzer {
+        constructor() {
+            this.followers = [];
+            this.suspiciousAccounts = [];
+            this.isAnalyzing = false;
+            this.paused = false;
+        }
+
+        async startAnalysis() {
+            if (this.isAnalyzing) {
+                console.log('Analysis is already in progress');
+                return;
+            }
+
+            this.isAnalyzing = true;
+            this.paused = false;
+            console.log('Starting analysis...');
+            
+            try {
+                await this.getFollowers();
+                await this.analyzeFollowers();
+                this.displayResults();
+            } catch (error) {
+                console.error('Error during analysis:', error);
+            } finally {
+                this.isAnalyzing = false;
+            }
+        }
+
+        async getFollowers() {
+            console.log('Fetching followers...');
+            const userId = await this.getUserId();
+            this.followers = await this.getAllFollowers(userId);
+            console.log(`Found ${this.followers.length} followers`);
+        }
+
+        async analyzeFollowers() {
+            console.log('Analyzing followers...');
+            const batches = Math.ceil(this.followers.length / config.batchSize);
+            
+            for (let i = 0; i < batches; i++) {
+                if (this.paused) {
+                    console.log('Analysis paused. Click "Resume" to continue.');
+                    await new Promise(resolve => {
+                        const checkPause = setInterval(() => {
+                            if (!this.paused) {
+                                clearInterval(checkPause);
+                                resolve();
+                            }
+                        }, 1000);
+                    });
+                }
+
+                const start = i * config.batchSize;
+                const end = Math.min(start + config.batchSize, this.followers.length);
+                const batch = this.followers.slice(start, end);
+                
+                await this.analyzeBatch(batch);
+                
+                const progress = ((i + 1) / batches * 100).toFixed(1);
+                console.log(`Progress: ${progress}%`);
+            }
+        }
+
+        async analyzeBatch(batch) {
+            for (const follower of batch) {
+                if (await this.isSuspiciousAccount(follower)) {
+                    this.suspiciousAccounts.push(follower);
+                }
+            }
+        }
+
+        async isSuspiciousAccount(account) {
+            const profile = await this.getProfileInfo(account.id);
+            
+            // Check followers/following ratio
+            const ratio = profile.followers_count / (profile.following_count || 1);
+            if (ratio < config.followersFollowingRatio) return true;
+
+            // Check posts per month
+            const postsPerMonth = this.calculatePostsPerMonth(profile);
+            if (postsPerMonth < config.minPostsPerMonth) return true;
+
+            // Check engagement rate
+            const engagementRate = this.calculateEngagementRate(profile);
+            if (engagementRate < config.minEngagementRate) return true;
+
+            // Check account age
+            const accountAge = this.calculateAccountAge(profile);
+            if (accountAge < config.minAccountAge) return true;
+
+            // Check profile completeness
+            if (config.requireProfilePic && !profile.profile_pic_url) return true;
+            if (config.requireBio && !profile.biography) return true;
+
+            return false;
+        }
+
+        displayResults() {
+            console.log('\n=== Analysis Results ===');
+            console.log(`Total followers analyzed: ${this.followers.length}`);
+            console.log(`Suspicious accounts detected: ${this.suspiciousAccounts.length}`);
+            console.log(`Percentage of suspicious accounts: ${(this.suspiciousAccounts.length / this.followers.length * 100).toFixed(2)}%`);
+            
+            if (this.suspiciousAccounts.length > 0) {
+                console.log('\nSuspicious Accounts:');
+                this.suspiciousAccounts.forEach(account => {
+                    console.log(`- @${account.username}`);
+                });
+            }
+
+            this.exportToCSV();
+        }
+
+        exportToCSV() {
+            const csv = this.generateCSV();
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'suspicious_accounts.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        generateCSV() {
+            const headers = ['Username', 'Followers', 'Following', 'Posts', 'Engagement Rate', 'Account Age (days)'];
+            const rows = this.suspiciousAccounts.map(account => [
+                account.username,
+                account.followers_count,
+                account.following_count,
+                account.media_count,
+                this.calculateEngagementRate(account).toFixed(4),
+                this.calculateAccountAge(account)
+            ]);
+
+            return [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+        }
+
+        pauseAnalysis() {
+            this.paused = true;
+            console.log('Analysis paused');
+        }
+
+        resumeAnalysis() {
+            this.paused = false;
+            console.log('Analysis resumed');
+        }
+
+        // Helper methods
+        calculatePostsPerMonth(profile) {
+            const accountAge = this.calculateAccountAge(profile);
+            return (profile.media_count / accountAge) * 30;
+        }
+
+        calculateEngagementRate(profile) {
+            if (!profile.media_count) return 0;
+            const totalLikes = profile.media_count * 100; // Estimated average likes per post
+            return totalLikes / profile.followers_count;
+        }
+
+        calculateAccountAge(profile) {
+            const createdAt = new Date(profile.created_at);
+            const now = new Date();
+            return Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+        }
+    }
 
     // Variables globales
     let analysisResults = {
@@ -115,7 +287,7 @@
         while (hasNext) {
             const variables = {
                 id: userId,
-                first: config.followersPerRequest,
+                first: config.batchSize,
                 after: endCursor
             };
 
@@ -156,7 +328,7 @@
         while (hasNext) {
             const variables = {
                 id: userId,
-                first: config.followersPerRequest,
+                first: config.batchSize,
                 after: endCursor
             };
 
