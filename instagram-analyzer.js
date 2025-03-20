@@ -1,18 +1,18 @@
 // Instagram Fake Followers Detector
-// Ejecutar este código en la consola del navegador mientras estás en un perfil de Instagram
+// Run this code in the browser console while on an Instagram profile
 
 (() => {
-    // Verificar que estamos en Instagram y en un perfil
+    // Verify we're on Instagram and on a profile
     if (location.hostname !== 'www.instagram.com') {
-        alert('Esta herramienta solo puede usarse en Instagram');
+        alert('This tool can only be used on Instagram');
         return;
     }
 
-    // Obtener username de la URL actual
+    // Get username from current URL
     const getCurrentUsername = () => {
         const path = window.location.pathname;
         if (!path.match(/^\/[^/]+\/?$/)) {
-            alert('Por favor, ejecuta esta herramienta desde el perfil del usuario que quieres analizar\nEjemplo: https://www.instagram.com/username/');
+            alert('Please run this tool from the profile you want to analyze\nExample: https://www.instagram.com/username/');
             return null;
         }
         return path.split('/')[1];
@@ -23,204 +23,32 @@
 
     // Configuration for detecting fake followers
     const config = {
-        followersFollowingRatio: 2.0,    // Followers/following ratio
-        minPostsPerMonth: 2,            // Minimum posts per month
-        minEngagementRate: 0.01,        // Minimum engagement rate
-        minAccountAge: 30,              // Minimum account age in days
-        requireProfilePic: true,        // Require profile picture
-        requireBio: true,               // Require biography
-        batchSize: 50                   // Analysis batch size
+        maxPosts: 0,                      // Maximum posts to consider suspicious
+        minFollowers: 10,                 // Minimum followers to consider suspicious
+        followersPerRequest: 50,          // Followers per request
+        cooldownBetweenProfiles: 2000,    // Time between profile analysis (ms)
+        cooldownBetweenRequests: 1000,    // Time between requests (ms)
+        retryDelay: 5000                  // Base time for retries (ms)
     };
 
-    class InstagramAnalyzer {
-        constructor() {
-            this.followers = [];
-            this.suspiciousAccounts = [];
-            this.isAnalyzing = false;
-            this.paused = false;
-        }
-
-        async startAnalysis() {
-            if (this.isAnalyzing) {
-                console.log('Analysis is already in progress');
-                return;
-            }
-
-            this.isAnalyzing = true;
-            this.paused = false;
-            console.log('Starting analysis...');
-            
-            try {
-                await this.getFollowers();
-                await this.analyzeFollowers();
-                this.displayResults();
-            } catch (error) {
-                console.error('Error during analysis:', error);
-            } finally {
-                this.isAnalyzing = false;
-            }
-        }
-
-        async getFollowers() {
-            console.log('Fetching followers...');
-            const userId = await this.getUserId();
-            this.followers = await this.getAllFollowers(userId);
-            console.log(`Found ${this.followers.length} followers`);
-        }
-
-        async analyzeFollowers() {
-            console.log('Analyzing followers...');
-            const batches = Math.ceil(this.followers.length / config.batchSize);
-            
-            for (let i = 0; i < batches; i++) {
-                if (this.paused) {
-                    console.log('Analysis paused. Click "Resume" to continue.');
-                    await new Promise(resolve => {
-                        const checkPause = setInterval(() => {
-                            if (!this.paused) {
-                                clearInterval(checkPause);
-                                resolve();
-                            }
-                        }, 1000);
-                    });
-                }
-
-                const start = i * config.batchSize;
-                const end = Math.min(start + config.batchSize, this.followers.length);
-                const batch = this.followers.slice(start, end);
-                
-                await this.analyzeBatch(batch);
-                
-                const progress = ((i + 1) / batches * 100).toFixed(1);
-                console.log(`Progress: ${progress}%`);
-            }
-        }
-
-        async analyzeBatch(batch) {
-            for (const follower of batch) {
-                if (await this.isSuspiciousAccount(follower)) {
-                    this.suspiciousAccounts.push(follower);
-                }
-            }
-        }
-
-        async isSuspiciousAccount(account) {
-            const profile = await this.getProfileInfo(account.id);
-            
-            // Check followers/following ratio
-            const ratio = profile.followers_count / (profile.following_count || 1);
-            if (ratio < config.followersFollowingRatio) return true;
-
-            // Check posts per month
-            const postsPerMonth = this.calculatePostsPerMonth(profile);
-            if (postsPerMonth < config.minPostsPerMonth) return true;
-
-            // Check engagement rate
-            const engagementRate = this.calculateEngagementRate(profile);
-            if (engagementRate < config.minEngagementRate) return true;
-
-            // Check account age
-            const accountAge = this.calculateAccountAge(profile);
-            if (accountAge < config.minAccountAge) return true;
-
-            // Check profile completeness
-            if (config.requireProfilePic && !profile.profile_pic_url) return true;
-            if (config.requireBio && !profile.biography) return true;
-
-            return false;
-        }
-
-        displayResults() {
-            console.log('\n=== Analysis Results ===');
-            console.log(`Total followers analyzed: ${this.followers.length}`);
-            console.log(`Suspicious accounts detected: ${this.suspiciousAccounts.length}`);
-            console.log(`Percentage of suspicious accounts: ${(this.suspiciousAccounts.length / this.followers.length * 100).toFixed(2)}%`);
-            
-            if (this.suspiciousAccounts.length > 0) {
-                console.log('\nSuspicious Accounts:');
-                this.suspiciousAccounts.forEach(account => {
-                    console.log(`- @${account.username}`);
-                });
-            }
-
-            this.exportToCSV();
-        }
-
-        exportToCSV() {
-            const csv = this.generateCSV();
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'suspicious_accounts.csv';
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        generateCSV() {
-            const headers = ['Username', 'Followers', 'Following', 'Posts', 'Engagement Rate', 'Account Age (days)'];
-            const rows = this.suspiciousAccounts.map(account => [
-                account.username,
-                account.followers_count,
-                account.following_count,
-                account.media_count,
-                this.calculateEngagementRate(account).toFixed(4),
-                this.calculateAccountAge(account)
-            ]);
-
-            return [
-                headers.join(','),
-                ...rows.map(row => row.join(','))
-            ].join('\n');
-        }
-
-        pauseAnalysis() {
-            this.paused = true;
-            console.log('Analysis paused');
-        }
-
-        resumeAnalysis() {
-            this.paused = false;
-            console.log('Analysis resumed');
-        }
-
-        // Helper methods
-        calculatePostsPerMonth(profile) {
-            const accountAge = this.calculateAccountAge(profile);
-            return (profile.media_count / accountAge) * 30;
-        }
-
-        calculateEngagementRate(profile) {
-            if (!profile.media_count) return 0;
-            const totalLikes = profile.media_count * 100; // Estimated average likes per post
-            return totalLikes / profile.followers_count;
-        }
-
-        calculateAccountAge(profile) {
-            const createdAt = new Date(profile.created_at);
-            const now = new Date();
-            return Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-        }
-    }
-
-    // Variables globales
+    // Global variables
     let analysisResults = {
         fakeFollowers: [],
         suspiciousFollowers: [],
         totalFollowers: 0,
         analyzedCount: 0,
         lastUpdate: null,
-        analyzedProfiles: new Set()       // Set para guardar perfiles ya analizados
+        analyzedProfiles: new Set()       // Set to store already analyzed profiles
     };
 
-    // Variables de control
+    // Control variables
     let isPaused = false;
     let shouldStop = false;
 
-    // Función para esperar un tiempo determinado
+    // Function to wait for a specified time
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // Función para hacer una petición con reintentos
+    // Function to make a request with retries
     const fetchWithRetry = async (url, options = {}, maxRetries = 3) => {
         for (let i = 0; i < maxRetries; i++) {
             try {
@@ -229,7 +57,7 @@
                 
                 if (response.status === 429) {
                     const waitTime = (i + 1) * 5000; // 5s, 10s, 15s
-                    console.log(`Rate limit alcanzado. Esperando ${waitTime/1000} segundos...`);
+                    console.log(`Rate limit reached. Waiting ${waitTime/1000} seconds...`);
                     await wait(waitTime);
                     continue;
                 }
@@ -237,12 +65,12 @@
                 throw new Error(`HTTP error! status: ${response.status}`);
             } catch (error) {
                 if (i === maxRetries - 1) throw error;
-                await wait(2000); // Esperar 2s entre reintentos
+                await wait(2000); // Wait 2s between retries
             }
         }
     };
 
-    // Función para obtener ID del usuario
+    // Function to get user ID
     const getUserId = async (username) => {
         try {
             const response = await fetchWithRetry(
@@ -256,12 +84,12 @@
             const data = await response.json();
             return data.data.user.id;
         } catch (error) {
-            console.error('Error al obtener ID:', error);
+            console.error('Error getting ID:', error);
             throw error;
         }
     };
 
-    // Función para obtener todos los seguidores de una vez
+    // Function to get all followers at once
     const getAllFollowers = async (userId) => {
         let followers = [];
         let hasNext = true;
@@ -269,7 +97,7 @@
         let totalCount = 0;
         let currentCount = 0;
 
-        // Primero obtener el total de seguidores
+        // First get total followers
         const initialResponse = await fetchWithRetry(
             `https://www.instagram.com/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=${encodeURIComponent(JSON.stringify({
                 id: userId,
@@ -287,7 +115,7 @@
         while (hasNext) {
             const variables = {
                 id: userId,
-                first: config.batchSize,
+                first: config.followersPerRequest,
                 after: endCursor
             };
 
@@ -307,52 +135,22 @@
             currentCount += edges.length;
             const progress = (currentCount / totalCount) * 100;
             progressBar.style.width = `${33 * (progress / 100)}%`;
-            progressText.textContent = `Obteniendo lista de seguidores... ${currentCount}/${totalCount} (${progress.toFixed(1)}%)`;
+            progressText.textContent = `Getting followers list... ${currentCount}/${totalCount} (${progress.toFixed(1)}%)`;
             
             hasNext = data.data.user.edge_followed_by.page_info.has_next_page;
             endCursor = data.data.user.edge_followed_by.page_info.end_cursor;
 
-            // Esperar 1 segundo entre solicitudes para evitar límites
+            // Wait 1 second between requests to avoid limits
             await wait(1000);
         }
 
         return followers;
     };
 
-    // Función para obtener todos los seguidos de una vez
-    const getAllFollowing = async (userId) => {
-        let following = [];
-        let hasNext = true;
-        let endCursor = null;
-
-        while (hasNext) {
-            const variables = {
-                id: userId,
-                first: config.batchSize,
-                after: endCursor
-            };
-
-            const response = await fetch(`https://www.instagram.com/graphql/query/?query_hash=d04b0a864b4b54837c0d870b0e77e076&variables=${encodeURIComponent(JSON.stringify(variables))}`, {
-                headers: {
-                    'X-IG-App-ID': '936619743392459'
-                }
-            });
-
-            const data = await response.json();
-            const edges = data.data.user.edge_follow.edges;
-            following = following.concat(edges.map(edge => edge.node));
-            
-            hasNext = data.data.user.edge_follow.page_info.has_next_page;
-            endCursor = data.data.user.edge_follow.page_info.end_cursor;
-        }
-
-        return following;
-    };
-
-    // Función para analizar un perfil
+    // Function to analyze a profile
     const analyzeProfile = async (username) => {
         try {
-            // Esperar 2 segundos entre cada análisis de perfil
+            // Wait 2 seconds between each profile analysis
             await wait(2000);
 
             const response = await fetchWithRetry(
@@ -377,12 +175,12 @@
                             user.edge_followed_by.count > config.minFollowers
             };
         } catch (error) {
-            console.error(`Error al analizar perfil ${username}:`, error);
+            console.error(`Error analyzing profile ${username}:`, error);
             return null;
         }
     };
 
-    // Función para guardar resultados localmente
+    // Function to save results locally
     const saveResults = () => {
         const data = {
             username,
@@ -396,7 +194,7 @@
         localStorage.setItem(`instagram_analyzer_${username}`, JSON.stringify(data));
     };
 
-    // Función para cargar resultados guardados
+    // Function to load saved results
     const loadSavedResults = () => {
         const saved = localStorage.getItem(`instagram_analyzer_${username}`);
         if (saved) {
@@ -411,7 +209,7 @@
         return false;
     };
 
-    // Crear la interfaz de usuario
+    // Create user interface
     const createUI = () => {
         const container = document.createElement('div');
         container.style.cssText = `
@@ -431,79 +229,79 @@
         `;
 
         container.innerHTML = `
-            <h2 style="margin-bottom: 15px; color: #fff;">Detector de Cuentas Sospechosas</h2>
+            <h2 style="margin-bottom: 15px; color: #fff;">Suspicious Accounts Detector</h2>
             <div style="margin-bottom: 15px;">
                 <div style="background: #222; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                    <p style="margin: 0; color: #fff;">Analizando perfil: <strong style="color: #0095f6;">@${username}</strong></p>
+                    <p style="margin: 0; color: #fff;">Analyzing profile: <strong style="color: #0095f6;">@${username}</strong></p>
                 </div>
                 <div style="margin-bottom: 10px;">
                     <button id="configBtn" style="width: 100%; padding: 8px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 10px;">
-                        ⚙️ Configuración Avanzada
+                        ⚙️ Advanced Settings
                     </button>
                     <div id="configPanel" style="display: none; background: #222; padding: 15px; border-radius: 4px; margin-bottom: 10px;">
-                        <h3 style="margin-bottom: 15px; color: #fff;">Configuración</h3>
+                        <h3 style="margin-bottom: 15px; color: #fff;">Settings</h3>
                         <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; color: #fff;">Máximo posts para considerar sospechoso:</label>
+                            <label style="display: block; margin-bottom: 5px; color: #fff;">Maximum posts to consider suspicious:</label>
                             <input type="number" id="maxPosts" value="${config.maxPosts}" min="0" 
                                 style="width: 100%; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px;">
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; color: #fff;">Mínimo seguidores para considerar sospechoso:</label>
+                            <label style="display: block; margin-bottom: 5px; color: #fff;">Minimum followers to consider suspicious:</label>
                             <input type="number" id="minFollowers" value="${config.minFollowers}" min="1" 
                                 style="width: 100%; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px;">
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; color: #fff;">Tiempo entre análisis de perfiles (ms):</label>
+                            <label style="display: block; margin-bottom: 5px; color: #fff;">Time between profile analysis (ms):</label>
                             <input type="number" id="cooldownBetweenProfiles" value="${config.cooldownBetweenProfiles}" min="1000" 
                                 style="width: 100%; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px;">
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; color: #fff;">Tiempo entre solicitudes (ms):</label>
+                            <label style="display: block; margin-bottom: 5px; color: #fff;">Time between requests (ms):</label>
                             <input type="number" id="cooldownBetweenRequests" value="${config.cooldownBetweenRequests}" min="500" 
                                 style="width: 100%; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px;">
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; color: #fff;">Tiempo base para reintentos (ms):</label>
+                            <label style="display: block; margin-bottom: 5px; color: #fff;">Base time for retries (ms):</label>
                             <input type="number" id="retryDelay" value="${config.retryDelay}" min="2000" 
                                 style="width: 100%; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px;">
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button id="saveConfigBtn" style="flex: 1; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Guardar
+                                Save
                             </button>
                             <button id="cancelConfigBtn" style="flex: 1; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Cancelar
+                                Cancel
                             </button>
                         </div>
                     </div>
                 </div>
                 <div id="resumePanel" style="display: none; background: #222; padding: 15px; border-radius: 4px; margin-bottom: 10px;">
-                    <h3 style="margin-bottom: 15px; color: #fff;">Análisis Anterior Encontrado</h3>
-                    <p style="color: #fff; margin-bottom: 10px;">Se encontró un análisis anterior de este perfil.</p>
+                    <h3 style="margin-bottom: 15px; color: #fff;">Previous Analysis Found</h3>
+                    <p style="color: #fff; margin-bottom: 10px;">A previous analysis of this profile was found.</p>
                     <div style="display: flex; gap: 10px;">
                         <button id="resumeBtn" style="flex: 1; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            Reanudar Análisis
+                            Resume Analysis
                         </button>
                         <button id="newAnalysisBtn" style="flex: 1; padding: 8px; background: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            Nuevo Análisis
+                            New Analysis
                         </button>
                     </div>
                 </div>
                 <button id="analyzeBtn" style="width: 100%; padding: 10px; background: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Comenzar Análisis
+                    Start Analysis
                 </button>
             </div>
             <div id="progress" style="display: none;">
                 <div style="width: 100%; height: 4px; background: #333; border-radius: 2px; margin: 10px 0;">
                     <div id="progressBar" style="width: 0%; height: 100%; background: #0095f6; border-radius: 2px; transition: width 0.3s;"></div>
                 </div>
-                <p id="progressText" style="text-align: center; margin: 5px 0;">Obteniendo datos...</p>
+                <p id="progressText" style="text-align: center; margin: 5px 0;">Getting data...</p>
                 <div id="controlButtons" style="display: none; margin-top: 10px; display: flex; gap: 10px;">
                     <button id="pauseBtn" style="flex: 1; padding: 8px; background: #ffd700; color: #000; border: none; border-radius: 4px; cursor: pointer;">
-                        ⏸️ Pausar
+                        ⏸️ Pause
                     </button>
                     <button id="stopBtn" style="flex: 1; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        ⏹️ Detener
+                        ⏹️ Stop
                     </button>
                 </div>
             </div>
@@ -511,11 +309,11 @@
                 <div id="stats" style="margin-bottom: 15px;"></div>
                 <div id="lists" style="display: flex; gap: 10px;">
                     <button id="exportBtn" style="flex: 1; padding: 8px; background: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        📥 Exportar CSV
+                        📥 Export CSV
                     </button>
                 </div>
                 <div id="suspiciousFollowers" style="margin-top: 15px;">
-                    <h4 style="color: #fff; margin-bottom: 10px;">Cuentas Sospechosas:</h4>
+                    <h4 style="color: #fff; margin-bottom: 10px;">Suspicious Accounts:</h4>
                     <div id="suspiciousFollowersList" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
             </div>
@@ -571,7 +369,7 @@
         document.getElementById('pauseBtn').addEventListener('click', () => {
             isPaused = !isPaused;
             const pauseBtn = document.getElementById('pauseBtn');
-            pauseBtn.textContent = isPaused ? '▶️ Reanudar' : '⏸️ Pausar';
+            pauseBtn.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
             pauseBtn.style.background = isPaused ? '#28a745' : '#ffd700';
         });
         document.getElementById('stopBtn').addEventListener('click', () => {
@@ -583,15 +381,15 @@
         });
         document.getElementById('exportBtn').addEventListener('click', () => {
             if (analysisResults.suspiciousFollowers.length === 0) {
-                alert('No hay datos para exportar');
+                alert('No data to export');
                 return;
             }
-            const filename = `cuentas_sospechosas_${username}_${new Date().toISOString().split('T')[0]}.csv`;
+            const filename = `suspicious_accounts_${username}_${new Date().toISOString().split('T')[0]}.csv`;
             downloadCSV(analysisResults.suspiciousFollowers, filename);
         });
     };
 
-    // Función para convertir datos a CSV
+    // Function to convert data to CSV
     const convertToCSV = (data) => {
         const header = ['username', 'posts', 'followers'];
         const rows = data.map(item => [
@@ -604,7 +402,7 @@
             .join('\n');
     };
 
-    // Función para descargar CSV
+    // Function to download CSV
     const downloadCSV = (data, filename) => {
         const csv = convertToCSV(data);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -620,9 +418,9 @@
         }
     };
 
-    // Función principal de análisis modificada
+    // Main analysis function
     const analyzeAccount = async (isResume = false) => {
-        // Actualizar configuración
+        // Update configuration
         config.maxPosts = parseInt(document.getElementById('maxPosts').value) || 0;
         config.minFollowers = parseInt(document.getElementById('minFollowers').value) || 10;
 
@@ -640,22 +438,22 @@
         controlButtons.style.display = 'none';
         exportBtn.style.display = 'none';
         
-        // Reiniciar variables de control
+        // Reset control variables
         isPaused = false;
         shouldStop = false;
         
         try {
-            // Obtener ID del usuario
-            progressText.textContent = 'Obteniendo ID del usuario...';
+            // Get user ID
+            progressText.textContent = 'Getting user ID...';
             const userId = await getUserId(username);
 
-            // Obtener todos los seguidores
-            progressText.textContent = 'Obteniendo lista de seguidores...';
+            // Get all followers
+            progressText.textContent = 'Getting followers list...';
             progressBar.style.width = '0%';
             const followers = await getAllFollowers(userId);
             
-            // Analizar cada seguidor
-            progressText.textContent = 'Analizando perfiles...';
+            // Analyze each follower
+            progressText.textContent = 'Analyzing profiles...';
             progressBar.style.width = '33%';
             controlButtons.style.display = 'flex';
             
@@ -669,11 +467,11 @@
                 
                 const follower = followers[i];
                 
-                // Si es un reanudar y ya analizamos este perfil, saltarlo
+                // If resuming and we already analyzed this profile, skip it
                 if (isResume && analysisResults.analyzedProfiles.has(follower.username)) {
                     const progress = ((i + 1) / followers.length) * 100;
                     progressBar.style.width = `${33 + (progress * 0.67)}%`;
-                    progressText.textContent = `Analizando perfiles... ${i + 1}/${followers.length} (${progress.toFixed(1)}%)`;
+                    progressText.textContent = `Analyzing profiles... ${i + 1}/${followers.length} (${progress.toFixed(1)}%)`;
                     continue;
                 }
                 
@@ -685,13 +483,13 @@
                     }
                 }
                 
-                // Actualizar progreso
+                // Update progress
                 const progress = ((i + 1) / followers.length) * 100;
                 progressBar.style.width = `${33 + (progress * 0.67)}%`;
-                progressText.textContent = `Analizando perfiles... ${i + 1}/${followers.length} (${progress.toFixed(1)}%)`;
+                progressText.textContent = `Analyzing profiles... ${i + 1}/${followers.length} (${progress.toFixed(1)}%)`;
             }
 
-            // Actualizar resultados
+            // Update results
             analysisResults = {
                 suspiciousFollowers,
                 totalFollowers: followers.length,
@@ -700,17 +498,17 @@
                 analyzedProfiles: analysisResults.analyzedProfiles
             };
 
-            // Guardar resultados
+            // Save results
             saveResults();
 
-            // Mostrar resultados
+            // Display results
             const stats = document.getElementById('stats');
             const suspiciousFollowersList = document.getElementById('suspiciousFollowersList');
 
             stats.innerHTML = `
-                <p>Total de Seguidores: ${followers.length}</p>
-                <p>Cuentas Sospechosas Encontradas: ${suspiciousFollowers.length}</p>
-                <p>Porcentaje de Cuentas Sospechosas: ${((suspiciousFollowers.length / followers.length) * 100).toFixed(1)}%</p>
+                <p>Total Followers: ${followers.length}</p>
+                <p>Suspicious Accounts Found: ${suspiciousFollowers.length}</p>
+                <p>Percentage of Suspicious Accounts: ${((suspiciousFollowers.length / followers.length) * 100).toFixed(1)}%</p>
             `;
 
             suspiciousFollowersList.innerHTML = suspiciousFollowers.map(user => `
@@ -721,7 +519,7 @@
                         </a>
                     </div>
                     <div style="color: #999;">
-                        ${user.posts} posts · ${user.followers} seguidores
+                        ${user.posts} posts · ${user.followers} followers
                     </div>
                 </div>
             `).join('');
@@ -730,8 +528,8 @@
             results.style.display = 'block';
 
         } catch (error) {
-            console.error('Error en el análisis:', error);
-            alert('Error al analizar la cuenta. Por favor intenta de nuevo.');
+            console.error('Error during analysis:', error);
+            alert('Error analyzing account. Please try again.');
         } finally {
             analyzeBtn.disabled = false;
             controlButtons.style.display = 'none';
@@ -739,6 +537,6 @@
         }
     };
 
-    // Inicializar la interfaz
+    // Initialize user interface
     createUI();
 })(); 
